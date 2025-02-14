@@ -82,7 +82,7 @@ public class Assignment {
     @JsonBackReference
     private Teacher teacherId;
     
-    @OneToMany(mappedBy = "assignmentId")
+    @OneToMany(mappedBy = "assignmentId",cascade = CascadeType.ALL,fetch = FetchType.LAZY,orphanRemoval = true)
 	@JsonBackReference
 	private List<AssignmentUpload> assignmentUpload= new ArrayList<>();
     

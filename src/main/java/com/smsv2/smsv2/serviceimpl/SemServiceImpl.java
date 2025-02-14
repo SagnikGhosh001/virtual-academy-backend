@@ -58,8 +58,8 @@ public class SemServiceImpl implements SemService {
 
 	@Override
 	public ResponseEntity<List<Sem>> getAllSem() {
-		List<Sem>sem= semdao.findAll();
-		return new ResponseEntity<>(sem,HttpStatus.OK);
+		List<Sem> sem = semdao.findAll();
+		return new ResponseEntity<>(sem, HttpStatus.OK);
 	}
 
 	@Override
@@ -68,19 +68,19 @@ public class SemServiceImpl implements SemService {
 		if (sem.isEmpty()) {
 			throw new ResourceNotFoundException("sem", "id", id);
 		}
-		return new ResponseEntity<>(sem,HttpStatus.OK);
+		return new ResponseEntity<>(sem, HttpStatus.OK);
 	}
 
 	@Override
 	public ResponseEntity<List<Sem>> getAllSemByTeacherId(int teacherId) {
-		List<Sem>sem= semdao.findByTeacherId(teacherId);
-		return new ResponseEntity<>(sem,HttpStatus.OK);
+		List<Sem> sem = semdao.findByTeacherId(teacherId);
+		return new ResponseEntity<>(sem, HttpStatus.OK);
 	}
 
 	@Override
 	public ResponseEntity<List<Sem>> getAllSemBydeptId(int deptId) {
-		List<Sem> sem= semdao.findByDeptId(deptId);
-		return new ResponseEntity<>(sem,HttpStatus.OK);
+		List<Sem> sem = semdao.findByDeptId(deptId);
+		return new ResponseEntity<>(sem, HttpStatus.OK);
 	}
 
 	@Override
@@ -91,14 +91,14 @@ public class SemServiceImpl implements SemService {
 		if (nameSem != null) {
 			throw new ResourceInternalServerErrorException("sem", "name", nameSem.getSemname());
 		}
-		
+
 		if ((teacher.isPresent() && teacher.get().getRole().equals("pic"))
 				|| (admin.isPresent() && admin.get().getRole().equals("admin"))) {
 			Sem sem = new Sem();
 			sem.setSemname(semDTO.getSemname());
 			sem.setCreatedAt(LocalDateTime.now());
 			semdao.save(sem);
-			return new ResponseEntity<>(sem,HttpStatus.OK);
+			return new ResponseEntity<>(sem, HttpStatus.OK);
 		} else {
 			throw new ResourceBadRequestException("your role should be pic or admin");
 		}
@@ -111,24 +111,25 @@ public class SemServiceImpl implements SemService {
 		Optional<Teacher> teacher = teacherDao.findById(semDTO.getUserid());
 		Optional<Admin> admin = adminDao.findById(semDTO.getUserid());
 		Sem nameSem = semdao.findBySemname(semDTO.getSemname());
-		if (nameSem != null && nameSem.getId()!=id) {
+		if (nameSem != null && nameSem.getId() != id) {
 			throw new ResourceInternalServerErrorException("sem", "name", nameSem.getSemname());
 		}
 		if ((teacher.isPresent() && teacher.get().getRole().equals("pic"))
 				|| (admin.isPresent() && admin.get().getRole().equals("admin"))) {
 			existSem.setSemname(semDTO.getSemname());
-			existSem.getSub().forEach(d->d.getAssignment().forEach(a->a.setSemname(semDTO.getSemname())));
-			existSem.getSub().forEach(d->d.getAttendance().forEach(a->a.setSemname(semDTO.getSemname())));
-			existSem.getSub().forEach(d->d.getBook().forEach(a->a.setSemname(semDTO.getSemname())));
-			existSem.getSub().forEach(d->d.getMarks().forEach(a->a.setSemname(semDTO.getSemname())));
-			existSem.getSub().forEach(d->d.getNotes().forEach(a->a.setSemname(semDTO.getSemname())));
-			existSem.getSub().forEach(d->d.getTopics().forEach(a->a.setSemname(semDTO.getSemname())));
-			existSem.getStudent().forEach(d->d.setSemname(semDTO.getSemname()));
-			existSem.getSub().forEach(d->d.setSemname(semDTO.getSemname()));
-			existSem.getSub().forEach(d->d.getAssignment().forEach(a->a.getAssignmentUpload().forEach(au->au.setSemname(semDTO.getSemname()))));
+			existSem.getSub().forEach(d -> d.getAssignment().forEach(a -> a.setSemname(semDTO.getSemname())));
+			existSem.getSub().forEach(d -> d.getAttendance().forEach(a -> a.setSemname(semDTO.getSemname())));
+			existSem.getSub().forEach(d -> d.getBook().forEach(a -> a.setSemname(semDTO.getSemname())));
+			existSem.getSub().forEach(d -> d.getMarks().forEach(a -> a.setSemname(semDTO.getSemname())));
+			existSem.getSub().forEach(d -> d.getNotes().forEach(a -> a.setSemname(semDTO.getSemname())));
+			existSem.getSub().forEach(d -> d.getTopics().forEach(a -> a.setSemname(semDTO.getSemname())));
+			existSem.getStudent().forEach(d -> d.setSemname(semDTO.getSemname()));
+			existSem.getSub().forEach(d -> d.setSemname(semDTO.getSemname()));
+			existSem.getSub().forEach(d -> d.getAssignment()
+					.forEach(a -> a.getAssignmentUpload().forEach(au -> au.setSemname(semDTO.getSemname()))));
 			existSem.setModifiedAt(LocalDateTime.now());
 			semdao.save(existSem);
-			return new ResponseEntity<>(existSem,HttpStatus.OK);
+			return new ResponseEntity<>(existSem, HttpStatus.OK);
 		} else {
 			throw new ResourceBadRequestException("your role should be pic or admin");
 		}

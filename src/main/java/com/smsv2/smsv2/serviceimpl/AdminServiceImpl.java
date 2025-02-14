@@ -106,6 +106,8 @@ public class AdminServiceImpl implements AdminService {
 
 			admin.getFeedback().forEach(feedback -> feedback.setUser(null));
 			admin.getFeedback().clear();
+			admin.getJoinedRooms().forEach(j -> j.setParticipants(null));
+			admin.getJoinedRooms().clear();
 			admindao.delete(admin);
 			return new ResponseEntity<>(HttpStatus.OK);
 

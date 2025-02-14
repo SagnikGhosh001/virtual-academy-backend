@@ -41,7 +41,7 @@ public class StudentServiceImpl implements StudentService {
 
 	@Autowired
 	private AdminDao adminDao;
-	
+
 	@Autowired
 	private DeptDao deptdao;
 
@@ -58,8 +58,8 @@ public class StudentServiceImpl implements StudentService {
 
 	@Override
 	public ResponseEntity<List<Student>> getAllStudent() {
-		List<Student>student= studentdao.findAll();
-		return new ResponseEntity<>(student,HttpStatus.OK);
+		List<Student> student = studentdao.findAll();
+		return new ResponseEntity<>(student, HttpStatus.OK);
 	}
 
 	@Override
@@ -68,7 +68,7 @@ public class StudentServiceImpl implements StudentService {
 		if (studentOptional.isEmpty()) {
 			throw new ResourceNotFoundException("student", "id", id);
 		}
-		return new ResponseEntity<>(studentOptional,HttpStatus.OK);
+		return new ResponseEntity<>(studentOptional, HttpStatus.OK);
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class StudentServiceImpl implements StudentService {
 		if (student.isEmpty()) {
 			throw new ResourceNotFoundException("student", "email", email);
 		}
-		return new ResponseEntity<>(student,HttpStatus.OK);
+		return new ResponseEntity<>(student, HttpStatus.OK);
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class StudentServiceImpl implements StudentService {
 		if (student.isEmpty()) {
 			throw new ResourceNotFoundException("student", "phone", phone);
 		}
-		return new ResponseEntity<>(student,HttpStatus.OK);
+		return new ResponseEntity<>(student, HttpStatus.OK);
 	}
 
 	@Override
@@ -95,25 +95,25 @@ public class StudentServiceImpl implements StudentService {
 		if (student.isEmpty()) {
 			throw new ResourceNotFoundException("student", "reg", reg);
 		}
-		return new ResponseEntity<>(student,HttpStatus.OK);
+		return new ResponseEntity<>(student, HttpStatus.OK);
 	}
 
 	@Override
 	public ResponseEntity<List<Student>> getAllStudentByDept(int deptId) {
-		List<Student>student= studentdao.findByDeptId(deptId);
-		return new ResponseEntity<>(student,HttpStatus.OK);
+		List<Student> student = studentdao.findByDeptId(deptId);
+		return new ResponseEntity<>(student, HttpStatus.OK);
 	}
 
 	@Override
 	public ResponseEntity<List<Student>> getAllStudentBySem(int semId) {
-		List<Student> student= studentdao.findBySemId(semId);
-		return new ResponseEntity<>(student,HttpStatus.OK);
+		List<Student> student = studentdao.findBySemId(semId);
+		return new ResponseEntity<>(student, HttpStatus.OK);
 	}
 
 	@Override
 	public ResponseEntity<List<Student>> getAllStudentBySemandDept(int semId, int deptId) {
-		List<Student> student= studentdao.getByDeptandSem(semId, deptId);
-		return new ResponseEntity<>(student,HttpStatus.OK);
+		List<Student> student = studentdao.getByDeptandSem(semId, deptId);
+		return new ResponseEntity<>(student, HttpStatus.OK);
 
 	}
 
@@ -135,11 +135,11 @@ public class StudentServiceImpl implements StudentService {
 				.orElseThrow(() -> new ResourceNotFoundException("sem", "id", studentDTO.getSemId()));
 		Dept dept = deptdao.findById(studentDTO.getDeptId())
 				.orElseThrow(() -> new ResourceNotFoundException("dept", "id", studentDTO.getDeptId()));
-	
-	    Optional<User> existingStudent = userdao.findByEmail(studentDTO.getEmail());
-	    if (existingStudent.isPresent()) {
-	        throw new ResourceInternalServerErrorException("student","email",studentDTO.getEmail());
-	    }
+
+		Optional<User> existingStudent = userdao.findByEmail(studentDTO.getEmail());
+		if (existingStudent.isPresent()) {
+			throw new ResourceInternalServerErrorException("student", "email", studentDTO.getEmail());
+		}
 
 		BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
 		Student student = new Student();
@@ -166,7 +166,7 @@ public class StudentServiceImpl implements StudentService {
 				+ "Click the link below to verify:\n" + verificationUrl;
 		studentemailservice.sendVerficationEmail1(studentDTO.getEmail(), verificationMsg);
 		studentdao.save(student);
-		return new ResponseEntity<>(student,HttpStatus.OK);
+		return new ResponseEntity<>(student, HttpStatus.OK);
 	}
 
 	@Override
@@ -176,11 +176,11 @@ public class StudentServiceImpl implements StudentService {
 		if (existStudent.getId() == studentDTO.getUserId()) {
 			existStudent.setGender(studentDTO.getGender());
 			existStudent.setName(studentDTO.getName());
-			existStudent.getAssignmentUpload().forEach(a->a.setStudentName(studentDTO.getName()));
-			existStudent.getInbox().forEach(a->a.setStudentName(studentDTO.getName()));
+			existStudent.getAssignmentUpload().forEach(a -> a.setStudentName(studentDTO.getName()));
+			existStudent.getInbox().forEach(a -> a.setStudentName(studentDTO.getName()));
 			existStudent.setModifiedAt(LocalDateTime.now());
 			studentdao.save(existStudent);
-			return new ResponseEntity<>(existStudent,HttpStatus.OK);
+			return new ResponseEntity<>(existStudent, HttpStatus.OK);
 		} else {
 			throw new ResourceBadRequestException("You are not allowed");
 		}
@@ -197,35 +197,38 @@ public class StudentServiceImpl implements StudentService {
 				.orElseThrow(() -> new ResourceNotFoundException("sem", "id", studentDTO.getSemId()));
 		Dept dept = deptdao.findById(studentDTO.getDeptId())
 				.orElseThrow(() -> new ResourceNotFoundException("dept", "id", studentDTO.getDeptId()));
-		if (teacher.isPresent()&&(!teacher.get().getRole().equals("pic")&& teacher.get().getDept() == null || teacher.get().getSem()==null)) {
-	        throw new ResourceBadRequestException("Teacher's department and sem not found");
-	    }
-		if ((teacher.isPresent()&& teacher.get().getRole().equals("hod") && teacher.get().getDept().equals(existStudent.getDept())
-				&& teacher.get().getSem().contains(existStudent.getSem())) || (teacher.isPresent()&& teacher.get().getRole().equals("pic")) || (admin.isPresent() && admin.get().getRole().equals("admin"))) {
+		if (teacher.isPresent() && (!teacher.get().getRole().equals("pic") && teacher.get().getDept() == null
+				|| teacher.get().getSem() == null)) {
+			throw new ResourceBadRequestException("Teacher's department and sem not found");
+		}
+		if ((teacher.isPresent() && teacher.get().getRole().equals("hod")
+				&& teacher.get().getDept().equals(existStudent.getDept())
+				&& teacher.get().getSem().contains(existStudent.getSem()))
+				|| (teacher.isPresent() && teacher.get().getRole().equals("pic"))
+				|| (admin.isPresent() && admin.get().getRole().equals("admin"))) {
 			existStudent.setRole(studentDTO.getRole());
 			existStudent.setReg(studentDTO.getReg());
-			existStudent.getAssignmentUpload().forEach(a->a.setReg(studentDTO.getReg()));
-			existStudent.getMarks().forEach(a->a.setRegNo(studentDTO.getReg()));
-			existStudent.getInbox().forEach(a->a.setStudentReg(studentDTO.getReg()));
-			existStudent.getInbox().forEach(a->a.setStudentDept(dept.getDeptname()));
-			existStudent.getInbox().forEach(a->a.setStudentSem(sem.getSemname()));
+			existStudent.getAssignmentUpload().forEach(a -> a.setReg(studentDTO.getReg()));
+			existStudent.getMarks().forEach(a -> a.setRegNo(studentDTO.getReg()));
+			existStudent.getInbox().forEach(a -> a.setStudentReg(studentDTO.getReg()));
+			existStudent.getInbox().forEach(a -> a.setStudentDept(dept.getDeptname()));
+			existStudent.getInbox().forEach(a -> a.setStudentSem(sem.getSemname()));
 			existStudent.setSem(sem);
 			existStudent.setSemStaticId(sem.getId());
 			existStudent.setDeptStaticId(dept.getId());
 			existStudent.setDept(dept);
 			existStudent.setDeptname(dept.getDeptname());
 			existStudent.setModifiedAt(LocalDateTime.now());
-			if(teacher.isPresent()) {
+			if (teacher.isPresent()) {
 				existStudent.setModifiedby(teacher.get().getEmail());
-			}
-			else {
+			} else {
 				existStudent.setModifiedby(admin.get().getEmail());
-				
+
 			}
-				existStudent.setSemname(sem.getSemname());
+			existStudent.setSemname(sem.getSemname());
 			studentdao.save(existStudent);
-			return new ResponseEntity<>(existStudent,HttpStatus.OK);
-		}else {
+			return new ResponseEntity<>(existStudent, HttpStatus.OK);
+		} else {
 			throw new ResourceBadRequestException(" you are not allowed only HOD and PIC and ADMIN is allowed");
 		}
 
@@ -242,22 +245,27 @@ public class StudentServiceImpl implements StudentService {
 //				&& teacher.getSem().contains(existStudent.getSem())) || teacher.getRole().equals("pic")) {
 		Optional<Teacher> checkteacher = teacherdao.findById(studentDTO.getUserId());
 		Optional<Admin> admin = adminDao.findById(studentDTO.getUserId());
-		if (checkteacher.isPresent()&&(!checkteacher.get().getRole().equals("pic")&& checkteacher.get().getDept() == null || checkteacher.get().getSem()==null)) {
-	        throw new ResourceBadRequestException("Teacher's department not found");
-	    }
+		if (checkteacher.isPresent()
+				&& (!checkteacher.get().getRole().equals("pic") && checkteacher.get().getDept() == null
+						|| checkteacher.get().getSem() == null)) {
+			throw new ResourceBadRequestException("Teacher's department not found");
+		}
 		if ((checkteacher.isPresent() && checkteacher.get().getRole().equals("pic"))
-				|| (admin.isPresent() && admin.get().getRole().equals("admin"))||
-				(checkteacher.isPresent()&& checkteacher.get().getRole().equals("hod") && checkteacher.get().getDept().equals(existStudent.getDept())
+				|| (admin.isPresent() && admin.get().getRole().equals("admin"))
+				|| (checkteacher.isPresent() && checkteacher.get().getRole().equals("hod")
+						&& checkteacher.get().getDept().equals(existStudent.getDept())
 						&& checkteacher.get().getSem().contains(existStudent.getSem()))) {
-		
-		existStudent.getFeedback().forEach(feedback -> feedback.setUser(null));
-		existStudent.getFeedback().clear();
-		existStudent.getAssignmentUpload().forEach(assignmentupload->assignmentupload.setStudentId(null));
-		existStudent.getAssignmentUpload().forEach(assignmentupload->assignmentupload.setStudentName(null));
+
+			existStudent.getFeedback().forEach(feedback -> feedback.setUser(null));
+			existStudent.getFeedback().clear();
+			existStudent.getJoinedRooms().forEach(j -> j.setParticipants(null));
+			existStudent.getJoinedRooms().clear();
+			existStudent.getAssignmentUpload().forEach(assignmentupload -> assignmentupload.setStudentId(null));
+			existStudent.getAssignmentUpload().forEach(assignmentupload -> assignmentupload.setStudentName(null));
 			existStudent.getAssignmentUpload().clear();
 			studentdao.delete(existStudent);
 			return new ResponseEntity<>(HttpStatus.OK);
-		}else {
+		} else {
 			throw new ResourceBadRequestException(" you are not allowed only HOD and PIC and admin is allowed");
 		}
 
@@ -268,9 +276,11 @@ public class StudentServiceImpl implements StudentService {
 
 		Optional<Teacher> checkteacher = teacherdao.findById(studentDTO.getUserId());
 		Optional<Admin> admin = adminDao.findById(studentDTO.getUserId());
-		if (checkteacher.isPresent()&&(!checkteacher.get().getRole().equals("pic")&&  checkteacher.get().getDept() == null || checkteacher.get().getSem()==null)) {
-	        throw new ResourceBadRequestException("Teacher's department not found");
-	    }
+		if (checkteacher.isPresent()
+				&& (!checkteacher.get().getRole().equals("pic") && checkteacher.get().getDept() == null
+						|| checkteacher.get().getSem() == null)) {
+			throw new ResourceBadRequestException("Teacher's department not found");
+		}
 		if ((checkteacher.isPresent() && checkteacher.get().getRole().equals("pic"))
 				|| (admin.isPresent() && admin.get().getRole().equals("admin"))) {
 			// Fetch all students from the database
@@ -281,20 +291,20 @@ public class StudentServiceImpl implements StudentService {
 				// Clear the association between Student and Feedback
 				student.getFeedback().forEach(feedback -> feedback.setUser(null));
 				student.getFeedback().clear();
-				student.getAssignmentUpload().forEach(assignmentupload->assignmentupload.setStudentId(null));
-				student.getAssignmentUpload().forEach(assignmentupload->assignmentupload.setStudentName(null));
+				student.getAssignmentUpload().forEach(assignmentupload -> assignmentupload.setStudentId(null));
+				student.getAssignmentUpload().forEach(assignmentupload -> assignmentupload.setStudentName(null));
 				student.getAssignmentUpload().clear();
+				student.getJoinedRooms().forEach(j -> j.setParticipants(null));
+				student.getJoinedRooms().clear();
 			}
 
 			// Delete all students from the database
 			studentdao.deleteAll();
 			return new ResponseEntity<>(HttpStatus.OK);
-		}  else {
+		} else {
 			throw new ResourceBadRequestException("your are not pic");
 		}
 
 	}
-
-	
 
 }

@@ -247,6 +247,8 @@ public class TeacherServiceImpl implements TeacherService {
 			existTeacher.getAssignmentUpload().forEach(assigmentupload -> assigmentupload.setTeacherId(null));
 			existTeacher.getAssignmentUpload().forEach(assigmentupload -> assigmentupload.setTeachername(null));
 			existTeacher.getAssignmentUpload().clear();
+			existTeacher.getJoinedRooms().forEach(j -> j.setParticipants(null));
+			existTeacher.getJoinedRooms().clear();
 			teacherdao.delete(existTeacher);
 			 return new ResponseEntity<>(existTeacher,HttpStatus.OK);
 		} else {
@@ -336,6 +338,8 @@ public class TeacherServiceImpl implements TeacherService {
 				teacher.getAssignmentUpload().forEach(assigmentupload -> assigmentupload.setTeacherId(null));
 				teacher.getAssignmentUpload().forEach(assigmentupload -> assigmentupload.setTeachername(null));
 				teacher.getAssignmentUpload().clear();
+				teacher.getJoinedRooms().forEach(j -> j.setParticipants(null));
+				teacher.getJoinedRooms().clear();
 			}
 
 			// Delete all teachers from the database
