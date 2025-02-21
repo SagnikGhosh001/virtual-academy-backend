@@ -18,15 +18,24 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.smsv2.smsv2.DTO.MessageDTO;
+import com.smsv2.smsv2.DTO.RoomDTO;
+import com.smsv2.smsv2.dao.RoomDao;
 import com.smsv2.smsv2.entity.Message;
+import com.smsv2.smsv2.entity.Room;
+import com.smsv2.smsv2.entity.User;
+import com.smsv2.smsv2.exception.WebSocketException;
 import com.smsv2.smsv2.service.MessageService;
+import com.smsv2.smsv2.service.RoomService;
 
 @Controller
 public class WebsocketMessageController {
 
 	@Autowired
 	private MessageService messageService;
-
+	@Autowired
+	private RoomService roomService;
+	@Autowired
+	private RoomDao roomDao;
 	@Autowired
     private SimpMessagingTemplate messagingTemplate;
 	
@@ -66,6 +75,59 @@ public class WebsocketMessageController {
 	    messagingTemplate.convertAndSend("/topic/room/" + roomId, payload);
 	    System.out.println("Broadcasting deletion to /topic/room/" + roomId + ": " + payload);
 	}
+	@MessageMapping("/room/{roomId}/delete")
+	public void handleRoomDelete(
+			@DestinationVariable String roomId,
+			@Payload RoomDTO editDTO
+			) {
+		// Validate and delete the message
+		String id = roomService.deleteRoom(editDTO);
+		// Send structured JSON payload
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("type", "ROOMDELETE");
+		payload.put("roomId", id); // Ensure ID is an integer
+//		payload.put("roomId", roomId); // Include roomId for debugging
+		
+		// Broadcast to all clients
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, payload);
+		System.out.println("Broadcasting deletion to /topic/room/" + roomId + ": " + payload);
+	}
+	@MessageMapping("/room/{roomId}/leave")
+	public void handleLeaveRoom(
+			@DestinationVariable String roomId,
+			@Payload RoomDTO editDTO
+			) {
+		// Validate and delete the message
+		int id = roomService.leaveroom(editDTO);
+		// Send structured JSON payload
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("type", "LEAVE");
+		payload.put("userId", id); // Ensure ID is an integer
+//		payload.put("roomId", roomId); // Include roomId for debugging
+		
+		// Broadcast to all clients
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, payload);
+		System.out.println("Broadcasting deletion to /topic/room/" + roomId + ": " + payload);
+	}
+	@MessageMapping("/room/{roomId}/kick")
+	public void handleKickRoom(
+			@DestinationVariable String roomId,
+			@Payload RoomDTO editDTO
+			) {
+		// Validate and delete the message
+		Room room = roomDao.findByRoomId(editDTO.getRoomId())
+				.orElseThrow(() -> new WebSocketException("room not found with id"+ editDTO.getRoomId()));
+		int id = roomService.kickroom(editDTO);
+		// Send structured JSON payload
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("type", "KICK");
+		payload.put("userId", id); // Ensure ID is an integer
+		payload.put("creatorId", room.getCreator().getId()); // Include roomId for debugging
+		
+		// Broadcast to all clients
+		messagingTemplate.convertAndSend("/topic/room/" + roomId, payload);
+		System.out.println("Broadcasting deletion to /topic/room/" + roomId + ": " + payload);
+	}
 
-
+	
 }

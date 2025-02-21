@@ -17,6 +17,7 @@ import com.smsv2.smsv2.entity.Room;
 import com.smsv2.smsv2.entity.User;
 import com.smsv2.smsv2.exception.ResourceBadRequestException;
 import com.smsv2.smsv2.exception.ResourceNotFoundException;
+import com.smsv2.smsv2.exception.WebSocketException;
 import com.smsv2.smsv2.service.RoomService;
 
 import jakarta.transaction.Transactional;
@@ -105,22 +106,24 @@ public class RoomServiceImpl implements RoomService {
 	}
 
 	@Override
-	public ResponseEntity<?> deleteRoom(String id, RoomDTO roomDTO) {
+	@Transactional
+	public String deleteRoom(RoomDTO roomDTO) {
 		User user =userDao.findById(roomDTO.getCreatorid())
-				.orElseThrow(() -> new ResourceNotFoundException("user", "id", roomDTO.getCreatorid()));
-		Room room = roomDao.findByRoomId(id)
-				.orElseThrow(() -> new ResourceNotFoundException("room", "roomid", id));
+				.orElseThrow(() -> new WebSocketException("creator not found with id"+ roomDTO.getCreatorid()));
+		Room room = roomDao.findByRoomId(roomDTO.getRoomId())
+				.orElseThrow(() -> new WebSocketException("room not found with id"+ roomDTO.getRoomId()));
 		if(!room.getCreator().equals(user)) {
-			throw new ResourceBadRequestException("You are not allowed");
+			throw new WebSocketException("You are not allowed");
 		}
 		room.getParticipants().forEach(p -> p.setJoinedRooms(null));
 		room.getParticipants().clear();
 		roomDao.deleteById(room.getId());
-		String msg="Room Deleted Sucessfully";
-		return new ResponseEntity<>(msg,HttpStatus.OK);
+		String roomId=room.getRoomId();
+		return roomId;
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntity<?> joinRoom(RoomDTO roomDTO) {
 		User user =userDao.findById(roomDTO.getJoinid())
 				.orElseThrow(() -> new ResourceNotFoundException("user", "id", roomDTO.getJoinid()));
@@ -136,8 +139,7 @@ public class RoomServiceImpl implements RoomService {
         room.getParticipants().add(user);
         room.setLastActivity(LocalDateTime.now());
         roomDao.save(room);
-        String msg="You joind successfully";
-		return new ResponseEntity<>(msg,HttpStatus.OK);
+		return new ResponseEntity<>(user,HttpStatus.OK);
 	}
 
 	@Override
@@ -150,6 +152,47 @@ public class RoomServiceImpl implements RoomService {
 	public ResponseEntity<List<Room>> getRoomByParticipentId(int participentid) {
 		List<Room> room=roomDao.findByParticipantsId(participentid);
 		return new ResponseEntity<>(room,HttpStatus.OK);
+	}
+
+	@Override
+	@Transactional
+	public int leaveroom(RoomDTO roomDTO) {
+		User user =userDao.findById(roomDTO.getJoinid())
+				.orElseThrow(() -> new WebSocketException("user not found with id"+roomDTO.getJoinid()));
+		Room room = roomDao.findByRoomId(roomDTO.getRoomId())
+				.orElseThrow(() -> new WebSocketException("room not found with id"+ roomDTO.getRoomId()));
+		if(room.getCreator().equals(user)) {
+	        throw new WebSocketException("You are not allowed to leave. You are the creator");
+	    }
+	    
+
+	    if(!room.getParticipants().contains(user)) {
+	        throw new WebSocketException("You are not in this room.");
+	    }
+	    room.getParticipants().remove(user);
+	    roomDao.save(room);
+		return user.getId();
+	}
+
+	@Override
+	@Transactional
+	public int kickroom(RoomDTO roomDTO) {
+		User user =userDao.findById(roomDTO.getJoinid())
+				.orElseThrow(() -> new WebSocketException("creator not found with id"+ roomDTO.getJoinid()));
+		User creatoruser =userDao.findById(roomDTO.getCreatorid())
+				.orElseThrow(() -> new WebSocketException("user not found with id"+ roomDTO.getCreatorid()));
+		Room room = roomDao.findByRoomId(roomDTO.getRoomId())
+				.orElseThrow(() -> new WebSocketException("room not found with id"+ roomDTO.getRoomId()));
+		
+		if(!room.getCreator().equals(creatoruser)) {
+	        throw new WebSocketException("You are not allowed for this action.");
+	    }
+		if(room.getCreator().equals(user)) {
+	        throw new WebSocketException("You are not allowed to kick. You are the creator");
+	    }
+	    room.getParticipants().remove(user);
+	    roomDao.save(room);
+		return user.getId();
 	}
 
 }

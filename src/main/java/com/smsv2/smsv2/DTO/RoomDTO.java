@@ -15,4 +15,6 @@ public class RoomDTO {
 	private String password;
 	private int creatorid;
 	private int joinid;
+	
+	
 }

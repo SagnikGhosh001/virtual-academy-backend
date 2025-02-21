@@ -23,5 +23,8 @@ public interface RoomService {
 
 	ResponseEntity<?> editRoom(String id, RoomDTO roomDTO);
 
-	ResponseEntity<?> deleteRoom(String id, RoomDTO roomDTO);
+	String deleteRoom(RoomDTO roomDTO);
+	
+	int leaveroom(RoomDTO roomDTO);
+	int kickroom(RoomDTO roomDTO);
 }
